@@ -1,0 +1,28 @@
+name: Test
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  unit-test:
+    runs-on: [self-hosted]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Only run if dotnet changes
+        id: check_changes
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: shell
+          filters: |
+            dotnet:
+              - 'DistributedRaft/**'
+
+      - name: Restore dependencies and run tests
+        if: steps.check_changes.outputs.dotnet == 'true'
+        run: |
+          cd DistributedRaft
+          docker build -t raft_tests -f Dockerfile .
+          docker run -i --rm raft_tests /bin/bash -c "cd DistributedRaft.Tests; dotnet test"

@@ -43,3 +43,23 @@ services:
       - CLUSTER_NODES=http://node1:80;http://node2:80;http://node3:80
     ports:
       - "5000:80"
+  
+  swag:
+    container_name: drew-raft-swag
+    image: lscr.io/linuxserver/swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Denver
+      - URL=demomusic801.duckdns.org
+      - VALIDATION=duckdns
+      - DUCKDNSTOKEN=${DUCKDNSTOKEN}
+      - STAGING=false
+    volumes:
+      - /home/drew/data/swag:/config
+      - ./swag-default.conf:/config/nginx/site-confs/default.conf
+    ports:
+      - 0.0.0.0:4321:443
+    restart: unless-stopped
