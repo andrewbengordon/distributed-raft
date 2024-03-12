@@ -17,5 +17,5 @@ COPY --from=build-env /app/publish .
 ENV ASPNETCORE_HTTP_PORTS=
 ENTRYPOINT ["dotnet", "DistributedRaft.Cluster.dll"]
 
-EXPOSE 80
+EXPOSE 8080
 EXPOSE 443
