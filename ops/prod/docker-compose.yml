@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  node1:
+    build:
+      context: ../../DistributedRaft.Cluster
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:5001
+      - NODE_IDENTIFIER=node1
+      - OTHER_NODE_URLS=http://node2:80;http://node3:80
+    ports:
+      - "5001:80"
+
+  node2:
+    build:
+      context: ../../DistributedRaft.Cluster
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:5002
+      - NODE_IDENTIFIER=node2
+      - OTHER_NODE_URLS=http://node1:80;http://node3:80
+    ports:
+      - "5002:80"
+
+  node3:
+    build:
+      context: ../../DistributedRaft.Cluster
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:5003
+      - NODE_IDENTIFIER=node3
+      - OTHER_NODE_URLS=http://node1:80;http://node2:80
+    ports:
+      - "5003:80"
+  
+  gateway:
+    build:
+      context: ../../DistributedRaft.Gateway
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - CLUSTER_NODES=http://node1:80;http://node2:80;http://node3:80
+    ports:
+      - "5000:80"

@@ -1,0 +1,6 @@
+@DistributedRaft.Gateway_HostAddress = http://localhost:5245
+
+GET {{DistributedRaft.Gateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
