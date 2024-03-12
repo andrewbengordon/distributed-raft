@@ -1,4 +1,9 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+﻿FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS development
+WORKDIR /app
+COPY . ./
+CMD dotnet watch run --no-launch-profile --non-interactive --no-hot-reload
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build-env
 WORKDIR /app
 
 COPY DistributedRaft.Cluster.csproj .
@@ -9,13 +14,9 @@ COPY . ./
 WORKDIR "/app"
 RUN dotnet publish "DistributedRaft.Cluster.csproj" -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
 
 COPY --from=build-env /app/publish .
 
-ENV ASPNETCORE_HTTP_PORTS=
 ENTRYPOINT ["dotnet", "DistributedRaft.Cluster.dll"]
-
-EXPOSE 8080
-EXPOSE 443

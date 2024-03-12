@@ -1,36 +1,40 @@
 version: '3.8'
 
+x-node_base: &node_base
+  build:
+    context: ../../DistributedRaft.Cluster
+    dockerfile: Dockerfile
+    target: runtime
+
+x-node_environment: &node_environment
+  ASPNETCORE_ENVIRONMENT: Production
+  ASPNETCORE_URLS: http://+:8080
+
 services:
   node1:
-    build:
-      context: ../../DistributedRaft.Cluster
-      dockerfile: Dockerfile
+    <<: *node_base
     environment:
-      - ASPNETCORE_URLS=http://+:5001
-      - NODE_IDENTIFIER=node1
-      - OTHER_NODE_URLS=http://node2:8080;http://node3:8080
+      <<: *node_environment
+      NODE_IDENTIFIER: node1
+      OTHER_NODE_URLS: http://node2:8080;http://node3:8080
     ports:
       - "5001:8080"
 
   node2:
-    build:
-      context: ../../DistributedRaft.Cluster
-      dockerfile: Dockerfile
+    <<: *node_base
     environment:
-      - ASPNETCORE_URLS=http://+:5002
-      - NODE_IDENTIFIER=node2
-      - OTHER_NODE_URLS=http://node1:8080;http://node3:8080
+      <<: *node_environment
+      NODE_IDENTIFIER: node2
+      OTHER_NODE_URLS: http://node1:8080;http://node3:8080
     ports:
       - "5002:8080"
 
   node3:
-    build:
-      context: ../../DistributedRaft.Cluster
-      dockerfile: Dockerfile
+    <<: *node_base
     environment:
-      - ASPNETCORE_URLS=http://+:5003
-      - NODE_IDENTIFIER=node3
-      - OTHER_NODE_URLS=http://node1:8080;http://node2:8080
+      <<: *node_environment
+      NODE_IDENTIFIER: node3
+      OTHER_NODE_URLS: http://node1:8080;http://node2:8080
     ports:
       - "5003:8080"
   
@@ -38,11 +42,12 @@ services:
     build:
       context: ../../DistributedRaft.Gateway
       dockerfile: Dockerfile
+      target: runtime
     environment:
-      - ASPNETCORE_URLS=http://+:5000
-      - CLUSTER_NODES=http://node1:8080;http://node2:8080;http://node3:8080
+      ASPNETCORE_URLS: http://+:5000
+      CLUSTER_NODES: http://node1:8080;http://node2:8080;http://node3:8080
     ports:
-      - "5000:8080"
+      - "5010:8080"
   
   swag:
     container_name: drew-raft-swag

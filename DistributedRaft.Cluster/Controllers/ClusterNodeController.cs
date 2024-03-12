@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DistributedRaft.Cluster.Controllers;
 
-public class ClusterNodeController(IHttpClientFactory httpClientFactory) : Controller
+[ApiController]
+[Route("api/cluster-node")]
+public class ClusterNodeController(HttpClient httpClient) : Controller
 {
     private static readonly string NodeIdentifier = Environment.GetEnvironmentVariable("NODE_IDENTIFIER") ?? string.Empty;
     private static readonly string[] OtherNodeUrls = Environment.GetEnvironmentVariable("OTHER_NODE_URLS")?.Split(";") ?? Array.Empty<string>();
@@ -16,8 +18,6 @@ public class ClusterNodeController(IHttpClientFactory httpClientFactory) : Contr
     [HttpGet("status-of-other-nodes")]
     public async Task<IActionResult> GetStatusOfOtherNodes()
     {
-        var httpClient = httpClientFactory.CreateClient();
-
         foreach (var url in OtherNodeUrls)
         {
             try
