@@ -22,6 +22,9 @@ jobs:
       - name: redeploy application
         run: |
           cd ops/prod
-          docker compose down
           docker compose pull
-          docker compose up -d --build
+          docker stop drew-raft-swag
+          docker rm drew-raft-swag
+          docker compose build
+          docker compose down
+          docker compose up -d
