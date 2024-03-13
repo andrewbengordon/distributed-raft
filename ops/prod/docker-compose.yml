@@ -12,6 +12,7 @@ x-node_environment: &node_environment
 
 services:
   node1:
+    container_name: drew-raft-node1
     <<: *node_base
     environment:
       <<: *node_environment
@@ -19,6 +20,7 @@ services:
       OTHER_NODE_URLS: http://node2:8080;http://node3:8080
 
   node2:
+    container_name: drew-raft-node2
     <<: *node_base
     environment:
       <<: *node_environment
@@ -26,6 +28,7 @@ services:
       OTHER_NODE_URLS: http://node1:8080;http://node3:8080
 
   node3:
+    container_name: drew-raft-node3
     <<: *node_base
     environment:
       <<: *node_environment
