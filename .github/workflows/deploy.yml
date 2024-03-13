@@ -22,5 +22,6 @@ jobs:
       - name: redeploy application
         run: |
           cd ops/prod
+          docker compose down
           docker compose pull
           docker compose up -d --build
