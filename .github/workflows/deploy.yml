@@ -23,8 +23,6 @@ jobs:
         run: |
           cd ops/prod
           docker compose pull
-          docker stop drew-raft-swag
-          docker rm drew-raft-swag
           docker compose build
           docker compose down
           docker compose up -d
