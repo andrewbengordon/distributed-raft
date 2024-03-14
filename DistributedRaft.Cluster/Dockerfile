@@ -7,7 +7,6 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build-env
 WORKDIR /app
 
 COPY DistributedRaft.Cluster.csproj .
-COPY DistributedRaft.Data.csproj .
 RUN dotnet restore "DistributedRaft.Cluster.csproj"
 
 COPY . ./
