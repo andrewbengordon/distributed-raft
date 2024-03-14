@@ -1,4 +1,3 @@
-using DistributedRaft.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DistributedRaft.Cluster.Controllers;

@@ -17,8 +17,4 @@
         <Link>.dockerignore</Link>
       </Content>
     </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\DistributedRaft.Data\DistributedRaft.Data.csproj" />
-    </ItemGroup>
 </Project>

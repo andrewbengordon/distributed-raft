@@ -6,8 +6,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistributedRaft.Gateway", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistributedRaft.Tests", "DistributedRaft.Tests\DistributedRaft.Tests.csproj", "{AC8C0825-2DDB-41D7-88D2-1FBD1F3ABF81}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistributedRaft.Data", "DistributedRaft.Data\DistributedRaft.Data.csproj", "{FFD24DEB-6687-4B6D-A37A-CE42D79D5055}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,10 +24,6 @@ Global
 		{AC8C0825-2DDB-41D7-88D2-1FBD1F3ABF81}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC8C0825-2DDB-41D7-88D2-1FBD1F3ABF81}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC8C0825-2DDB-41D7-88D2-1FBD1F3ABF81}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FFD24DEB-6687-4B6D-A37A-CE42D79D5055}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FFD24DEB-6687-4B6D-A37A-CE42D79D5055}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FFD24DEB-6687-4B6D-A37A-CE42D79D5055}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FFD24DEB-6687-4B6D-A37A-CE42D79D5055}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection

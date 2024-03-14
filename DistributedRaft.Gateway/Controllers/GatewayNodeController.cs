@@ -1,4 +1,3 @@
-using DistributedRaft.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DistributedRaft.Gateway.Controllers;
@@ -33,4 +32,11 @@ public class GatewayNodeController(HttpClient httpClient, ILogger<GatewayNodeCon
         var result = await httpClient.PostAsJsonAsync($"{ClusterNodeUrls[0]}/api/cluster-node/compare-and-swap", request);
         return Ok(result);
     }
+}
+
+public class CompareAndSwapRequest
+{
+    public string Key { get; set; }
+    public string OldValue { get; set; }
+    public string NewValue { get; set; }
 }

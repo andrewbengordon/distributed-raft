@@ -1,5 +1,3 @@
-using DistributedRaft.Data;
-
 namespace DistributedRaft.Cluster;
 
 enum ClusterNodeState
@@ -173,3 +171,33 @@ public class ClusterNodeService(HttpClient httpClient, ILogger<ClusterNodeServic
     }
 }
 
+public class RequestVoteRequest
+{
+    public int Term { get; set; }
+    public string CandidateId { get; set; }
+}
+
+public class AppendEntriesRequest
+{
+    public int Term { get; set; }
+    public string LeaderId { get; set; }
+}
+
+public class CompareAndSwapRequest
+{
+    public string Key { get; set; }
+    public string OldValue { get; set; }
+    public string NewValue { get; set; }
+}
+
+public class AppendDataRequest
+{
+    public string Key { get; set; }
+    public string Value { get; set; }
+}
+
+public class VersionedValue<T>
+{
+    public T Value { get; set; }
+    public int Version { get; set; }
+}
