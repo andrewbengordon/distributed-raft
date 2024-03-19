@@ -5,6 +5,7 @@ x-node_base: &node_base
     context: ../../DistributedRaft.Cluster
     dockerfile: Dockerfile
     target: runtime
+  restart: unless-stopped
 
 x-node_environment: &node_environment
   ASPNETCORE_ENVIRONMENT: Production
@@ -44,6 +45,17 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       CLUSTER_NODES: http://node1:8080;http://node2:8080;http://node3:8080
+    restart: unless-stopped
+    
+  shop:
+    container_name: drew-raft-shop
+    build:
+      context: ../../DistributedRaft.Shop
+      dockerfile: Dockerfile
+      target: final
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    restart: unless-stopped
   
   swag:
     container_name: drew-raft-swag

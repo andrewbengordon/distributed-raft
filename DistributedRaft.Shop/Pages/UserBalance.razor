@@ -1,0 +1,72 @@
+@page "/UserBalance"
+@using DistributedRaft.Shop.Models
+@using DistributedRaft.Shop.Services
+@inject KeyValueStoreService KeyValueStoreService
+
+<h3>User Balance</h3>
+
+<div class="row">
+    <div class="col-6">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Username" @bind="_username">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" @onclick="GetBalance">View Balance</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (_balance.HasValue)
+{
+    <div class="row">
+        <div class="col-6">
+            <p>Balance: $@_balance.Value.ToString("N2")</p>
+            <div class="input-group mb-3">
+                <input type="number" class="form-control" placeholder="Amount" @bind="_transactionAmount">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-success" type="button" @onclick="Deposit">Deposit</button>
+                    <button class="btn btn-outline-danger" type="button" @onclick="Withdraw">Withdraw</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string _username = string.Empty;
+    private decimal? _balance = null;
+    private decimal _transactionAmount = 0;
+
+    private async Task GetBalance()
+    {
+        var balanceItem = await KeyValueStoreService.GetItemAsync($"balance-of-{_username}");
+        if (balanceItem != null && decimal.TryParse(balanceItem.Value, out var result))
+        {
+            _balance = result;
+        }
+        else
+        {
+            _balance = 0;
+        }
+    }
+
+    private async Task Deposit()
+    {
+        if (_transactionAmount > 0)
+        {
+            _balance += _transactionAmount;
+            await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = $"balance-of-{_username}", Value = _balance.ToString() });
+            _transactionAmount = 0;
+        }
+    }
+
+    private async Task Withdraw()
+    {
+        if (_transactionAmount > 0 && _balance >= _transactionAmount)
+        {
+            _balance -= _transactionAmount;
+            await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = $"balance-of-{_username}", Value = _balance.ToString() });
+            _transactionAmount = 0;
+        }
+    }
+}
