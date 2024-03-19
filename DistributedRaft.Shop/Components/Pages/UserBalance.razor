@@ -1,3 +1,4 @@
+@rendermode InteractiveServer
 @page "/UserBalance"
 @using DistributedRaft.Shop.Models
 @using DistributedRaft.Shop.Services
@@ -15,37 +16,37 @@
         </div>
     </div>
 </div>
-
-@if (_balance.HasValue)
-{
-    <div class="row">
-        <div class="col-6">
-            <p>Balance: $@_balance.Value.ToString("N2")</p>
-            <div class="input-group mb-3">
-                <input type="number" class="form-control" placeholder="Amount" @bind="_transactionAmount">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-success" type="button" @onclick="Deposit">Deposit</button>
-                    <button class="btn btn-outline-danger" type="button" @onclick="Withdraw">Withdraw</button>
-                </div>
+<div class="row">
+    <div class="col-6">
+        <p>Balance: $@_balance.ToString("N2")</p>
+        <div class="input-group mb-3">
+            <input type="number" class="form-control" placeholder="Amount" @bind="_transactionAmount">
+            <div class="input-group-append">
+                <button class="btn btn-outline-success" type="button" @onclick="Deposit">Deposit</button>
+                <button class="btn btn-outline-danger" type="button" @onclick="Withdraw">Withdraw</button>
             </div>
         </div>
     </div>
-}
+</div>
 
 @code {
     private string _username = string.Empty;
-    private decimal? _balance = null;
+    private decimal _balance = 0;
     private decimal _transactionAmount = 0;
 
     private async Task GetBalance()
     {
-        var balanceItem = await KeyValueStoreService.GetItemAsync($"balance-of-{_username}");
-        if (balanceItem != null && decimal.TryParse(balanceItem.Value, out var result))
+        try
         {
-            _balance = result;
+            var balanceItem = await KeyValueStoreService.GetItemAsync($"balance-of-{_username}");
+            if (balanceItem != null && decimal.TryParse(balanceItem.Value, out var result))
+            {
+                _balance = result;
+            }
         }
-        else
+        catch
         {
+            await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = $"balance-of-{_username}", Value = "0" });
             _balance = 0;
         }
     }
@@ -69,4 +70,5 @@
             _transactionAmount = 0;
         }
     }
+
 }

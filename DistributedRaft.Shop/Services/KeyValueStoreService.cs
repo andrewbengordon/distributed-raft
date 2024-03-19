@@ -1,26 +1,17 @@
-using System.Net.Http.Json;
 using DistributedRaft.Shop.Models;
 
 namespace DistributedRaft.Shop.Services;
 
-public class KeyValueStoreService
+public class KeyValueStoreService(HttpClient httpClient)
 {
-    private readonly HttpClient _httpClient;
-    
-    public KeyValueStoreService(HttpClient httpClient)
+    public async Task<KeyValueItem?> GetItemAsync(string key)
     {
-        _httpClient = httpClient;
-    }
-    
-    public async Task<KeyValueItem> GetItemAsync(string key)
-    {
-        var response = await _httpClient.GetFromJsonAsync<KeyValueItem>($"api/gateway-node/strong-get/{key}");
-        if (response == null) throw new InvalidOperationException();
+        var response = await httpClient.GetFromJsonAsync<KeyValueItem>($"api/gateway-node/strong-get/{key}");
         return response;
     }
     
     public async Task AddItemAsync(KeyValueItem item)
     {
-        await _httpClient.PostAsJsonAsync("KeyValue", item);
+        await httpClient.PostAsJsonAsync("api/gateway-node/compare-and-swap", item);
     }
 }
