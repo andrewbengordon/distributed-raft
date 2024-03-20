@@ -1,0 +1,28 @@
+@rendermode InteractiveServer
+@page "/OrderStatus/{OrderId}"
+@using DistributedRaft.Shop.Services
+@inject KeyValueStoreService KeyValueStoreService
+
+<h3>Order Status</h3>
+
+@if (!string.IsNullOrEmpty(orderStatus))
+{
+  <p>Order Status: @orderStatus</p>
+}
+else
+{
+  <p>Loading...</p>
+}
+
+@code {
+  [Parameter]
+  public string OrderId { get; set; }
+
+  private string orderStatus;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var statusItem = await KeyValueStoreService.GetItemAsync($"order-status-{OrderId}");
+    orderStatus = statusItem?.Value ?? "Unknown";
+  }
+}

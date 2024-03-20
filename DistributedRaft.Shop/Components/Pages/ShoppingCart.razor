@@ -1,0 +1,138 @@
+@rendermode InteractiveServer
+@page "/ShoppingCart"
+@using DistributedRaft.Shop.Models
+@using DistributedRaft.Shop.Services
+@using System.Text.Json
+@inject KeyValueStoreService KeyValueStoreService
+@inject NavigationManager NavigationManager
+
+<h3>Shopping Cart</h3>
+
+<h4>Products</h4>
+@if (_products == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    foreach (var product in _products)
+    {
+        <div>
+            @product.Name - $@product.Price
+            <button @onclick="() => AddToCart(product)">Add to Cart</button>
+        </div>
+    }
+}
+
+<h4>Cart</h4>
+@if (_cart.Any())
+{
+    @foreach (var item in _cart)
+    {
+        <div>@item.Name - Quantity: @item.Quantity</div>
+    }
+    <button @onclick="SubmitOrder">Submit Order</button>
+    <button @onclick=@(() => NavigationManager.NavigateTo($"/OrderStatus/{_orderId}"))>Check Order Status</button>
+}
+else
+{
+    <p>Your cart is empty.</p>
+}
+
+@code {
+    private List<Product>? _products;
+    private readonly List<CartItem> _cart = new();
+    private string? _orderId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var productKeys = new List<string>
+        {
+            "stock-of-Apple",
+            "stock-of-Banana",
+            "stock-of-Carrot",
+            "stock-of-Date",
+            "stock-of-Eggplant"
+        };
+
+        _products = new List<Product>();
+
+        foreach (var key in productKeys)
+        {
+            try
+            {
+                var stockItem = await KeyValueStoreService.GetItemAsync(key);
+                if (stockItem != null)
+                {
+                    if (int.TryParse(stockItem.Value, out var stock) && stock > 0)
+                    {
+                        _products.Add(new Product
+                        {
+                            Id = key,
+                            Name = GetProductName(key),
+                            Price = 1.00m,
+                            Stock = stock
+                        });
+                    }
+                }
+            }
+            catch
+            {
+                Console.WriteLine($"Failed to retrieve stock for {key}");
+            }
+        }
+    }
+
+
+    private void AddToCart(Product product)
+    {
+        var existingItem = _cart.FirstOrDefault(x => x.ProductId == product.Id);
+        if (existingItem != null)
+        {
+            existingItem.Quantity++;
+        }
+        else
+        {
+            _cart.Add(new CartItem { ProductId = product.Id, Name = product.Name, Quantity = 1 });
+        }
+    }
+
+    private async Task SubmitOrder()
+    {
+        _orderId = Guid.NewGuid().ToString();
+        var orderInfo = new OrderInfo
+        {
+            OrderId = _orderId,
+            PurchaserUsername = "exampleUser",
+            Products = _cart.Select(c => c.Name).ToList()
+        };
+
+        await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = $"order-status-{_orderId}", Value = "pending" });
+        await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = $"order-info-{_orderId}", Value = JsonSerializer.Serialize(orderInfo) });
+
+        HashSet<string> pendingOrders;
+        try
+        {
+            var pendingOrdersItem = await KeyValueStoreService.GetItemAsync("pending-orders");
+            pendingOrders = JsonSerializer.Deserialize<HashSet<string>>(pendingOrdersItem.Value) ?? new HashSet<string>();
+        }
+        catch
+        {
+            pendingOrders = new HashSet<string>();
+        }
+
+        pendingOrders.Add(_orderId);
+
+        await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = "pending-orders", Value = JsonSerializer.Serialize(pendingOrders) });
+
+        _cart.Clear();
+
+        NavigationManager.NavigateTo($"/OrderStatus/{_orderId}");
+    }
+
+    
+    private static string GetProductName(string key)
+    {
+        return key.Replace("stock-of-", "");
+    }
+}
