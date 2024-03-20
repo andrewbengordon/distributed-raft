@@ -1,0 +1,90 @@
+@rendermode InteractiveServer
+@page "/ProductStock"
+@using DistributedRaft.Shop.Models
+@using DistributedRaft.Shop.Services
+@inject KeyValueStoreService KeyValueStoreService
+
+<h3>Product Stock</h3>
+
+@if (_products == null)
+{
+  <p>
+    <em>Loading...</em>
+  </p>
+}
+else
+{
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Product Name</th>
+      <th>Current Stock</th>
+      <th>Adjust Stock</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var product in _products)
+    {
+      <tr>
+        <td>@GetProductName(product.Key)</td>
+        <td>@product.Value</td>
+        <td>
+          <input type="number" @bind="@product.AdjustmentAmount"/>
+          <button class="btn btn-primary" @onclick="() => AdjustStock(product.Key, product.AdjustmentAmount)">Adjust</button>
+        </td>
+      </tr>
+    }
+    </tbody>
+  </table>
+}
+
+@code {
+  private List<ProductStockItem>? _products;
+
+  protected override async Task OnInitializedAsync()
+  {
+    _products =
+    [
+      new ProductStockItem { Key = "stock-of-Apple" },
+      new ProductStockItem { Key = "stock-of-Banana" },
+      new ProductStockItem { Key = "stock-of-Carrot" },
+      new ProductStockItem { Key = "stock-of-Date" },
+      new ProductStockItem { Key = "stock-of-Eggplant" }
+    ];
+
+    foreach (var product in _products)
+    {
+      try
+      {
+        var item = await KeyValueStoreService.GetItemAsync(product.Key);
+        product.Value = item != null ? int.Parse(item.Value) : 0;
+      }
+      catch
+      {
+        product.Value = 0;
+        await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = product.Key, Value = "0" });
+      }
+    }
+  }
+
+  private async Task AdjustStock(string productName, int adjustmentAmount)
+  {
+    var item = await KeyValueStoreService.GetItemAsync(productName);
+    var currentStock = item != null ? int.Parse(item.Value) : 0;
+    var newStock = currentStock + adjustmentAmount;
+
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = productName, Value = newStock.ToString() });
+
+    var product = _products?.FirstOrDefault(p => p.Key == productName);
+    if (product != null)
+    {
+      product.Value = newStock;
+      product.AdjustmentAmount = 0;
+    }
+  }
+  
+  private string GetProductName(string key)
+  {
+    return key.Replace("stock-of-", "");
+  }
+}
