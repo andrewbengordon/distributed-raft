@@ -29,8 +29,8 @@ else
         <td>@GetProductName(product.Key)</td>
         <td>@product.Value</td>
         <td>
-          <input type="number" @bind="@product.AdjustmentAmount"/>
-          <button class="btn btn-primary" @onclick="() => AdjustStock(product.Key, product.AdjustmentAmount)">Adjust</button>
+          <button class="btn btn-outline-primary" @onclick="() => IncrementStock(product.Key)">+</button>
+          <button class="btn btn-outline-primary" @onclick="() => DecrementStock(product.Key)">-</button>
         </td>
       </tr>
     }
@@ -66,12 +66,12 @@ else
       }
     }
   }
-
-  private async Task AdjustStock(string productName, int adjustmentAmount)
+  
+  private async Task IncrementStock(string productName)
   {
     var item = await KeyValueStoreService.GetItemAsync(productName);
     var currentStock = item != null ? int.Parse(item.Value) : 0;
-    var newStock = currentStock + adjustmentAmount;
+    var newStock = currentStock + 1;
 
     await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = productName, Value = newStock.ToString() });
 
@@ -79,11 +79,25 @@ else
     if (product != null)
     {
       product.Value = newStock;
-      product.AdjustmentAmount = 0;
     }
   }
   
-  private string GetProductName(string key)
+  private async Task DecrementStock(string productName)
+  {
+    var item = await KeyValueStoreService.GetItemAsync(productName);
+    var currentStock = item != null ? int.Parse(item.Value) : 0;
+    var newStock = currentStock - 1;
+
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = productName, Value = newStock.ToString() });
+
+    var product = _products?.FirstOrDefault(p => p.Key == productName);
+    if (product != null)
+    {
+      product.Value = newStock;
+    }
+  }
+  
+  private static string GetProductName(string key)
   {
     return key.Replace("stock-of-", "");
   }
