@@ -8,131 +8,160 @@
 
 <h3>Shopping Cart</h3>
 
-<h4>Products</h4>
-@if (_products == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    foreach (var product in _products)
+<div class="container mt-3">
+  <h4 class="mt-5">Products</h4>
+  <div class="row">
+    @if (_products == null)
     {
-        <div>
-            @product.Name - $@product.Price
-            <button @onclick="() => AddToCart(product)">Add to Cart</button>
+      <p>
+        <em>Loading...</em>
+      </p>
+    }
+    else if (!_products.Any())
+    {
+      <p>No products in stock</p>
+    }
+    else
+    {
+      @foreach (var product in _products)
+      {
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">@product.Name</h5>
+              <p class="card-text">$@product.Price</p>
+              <button class="btn btn-primary" @onclick="() => AddToCart(product)">Add to Cart</button>
+            </div>
+          </div>
         </div>
+      }
     }
-}
+  </div>
 
-<h4>Cart</h4>
-@if (_cart.Any())
-{
-    @foreach (var item in _cart)
-    {
-        <div>@item.Name - Quantity: @item.Quantity</div>
-    }
-    <button @onclick="SubmitOrder">Submit Order</button>
-    <button @onclick=@(() => NavigationManager.NavigateTo($"/OrderStatus/{_orderId}"))>Check Order Status</button>
-}
-else
-{
+  <h4 class="mt-5">Cart</h4>
+  @if (_cart.Any())
+  {
+    <div class="col-md-6">
+      <ul class="list-group mb-3">
+        @foreach (var item in _cart)
+        {
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            @item.Name
+            <span>Quantity: @item.Quantity</span>
+          </li>
+        }
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <div class="input-group mb-3 me-1">
+        <input type="text" class="form-control" placeholder="Enter your username" @bind="_username"/>
+        <button class="btn btn-success" @onclick="SubmitOrder">Submit Order</button>
+      </div>
+    </div>
+  }
+  else
+  {
     <p>Your cart is empty.</p>
-}
+  }
+</div>
 
 @code {
-    private List<Product>? _products;
-    private readonly List<CartItem> _cart = new();
-    private string? _orderId;
+  private string _username;
+  private List<Product>? _products;
+  private readonly List<CartItem> _cart = new();
+  private string? _orderId;
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    var productKeys = new List<string>
     {
-        var productKeys = new List<string>
-        {
-            "stock-of-Apple",
-            "stock-of-Banana",
-            "stock-of-Carrot",
-            "stock-of-Date",
-            "stock-of-Eggplant"
-        };
+      "stock-of-Apple",
+      "stock-of-Banana",
+      "stock-of-Carrot",
+      "stock-of-Date",
+      "stock-of-Eggplant"
+    };
 
-        _products = new List<Product>();
+    _products = new List<Product>();
 
-        foreach (var key in productKeys)
+    foreach (var key in productKeys)
+    {
+      try
+      {
+        var stockItem = await KeyValueStoreService.GetItemAsync(key);
+        if (stockItem != null)
         {
-            try
+          if (int.TryParse(stockItem.Value, out var stock) && stock > 0)
+          {
+            _products.Add(new Product
             {
-                var stockItem = await KeyValueStoreService.GetItemAsync(key);
-                if (stockItem != null)
-                {
-                    if (int.TryParse(stockItem.Value, out var stock) && stock > 0)
-                    {
-                        _products.Add(new Product
-                        {
-                            Id = key,
-                            Name = GetProductName(key),
-                            Price = 1.00m,
-                            Stock = stock
-                        });
-                    }
-                }
-            }
-            catch
-            {
-                Console.WriteLine($"Failed to retrieve stock for {key}");
-            }
+              Id = key,
+              Name = GetProductName(key),
+              Price = 1.00m,
+              Stock = stock
+            });
+          }
         }
+      }
+      catch
+      {
+        Console.WriteLine($"Failed to retrieve stock for {key}");
+      }
     }
+  }
 
 
-    private void AddToCart(Product product)
+  private void AddToCart(Product product)
+  {
+    var existingItem = _cart.FirstOrDefault(x => x.ProductId == product.Id);
+    if (existingItem != null)
     {
-        var existingItem = _cart.FirstOrDefault(x => x.ProductId == product.Id);
-        if (existingItem != null)
-        {
-            existingItem.Quantity++;
-        }
-        else
-        {
-            _cart.Add(new CartItem { ProductId = product.Id, Name = product.Name, Quantity = 1 });
-        }
+      existingItem.Quantity++;
     }
-
-    private async Task SubmitOrder()
+    else
     {
-        _orderId = Guid.NewGuid().ToString();
-        var orderInfo = new OrderInfo
-        {
-            OrderId = _orderId,
-            PurchaserUsername = "exampleUser",
-            Products = _cart.Select(c => c.Name).ToList()
-        };
-
-        await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = $"order-status-{_orderId}", Value = "pending" });
-        await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = $"order-info-{_orderId}", Value = JsonSerializer.Serialize(orderInfo) });
-
-        HashSet<string> pendingOrders;
-        try
-        {
-            var pendingOrdersItem = await KeyValueStoreService.GetItemAsync("pending-orders");
-            pendingOrders = JsonSerializer.Deserialize<HashSet<string>>(pendingOrdersItem.Value) ?? new HashSet<string>();
-        }
-        catch
-        {
-            pendingOrders = new HashSet<string>();
-        }
-
-        pendingOrders.Add(_orderId);
-
-        await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = "pending-orders", Value = JsonSerializer.Serialize(pendingOrders) });
-
-        _cart.Clear();
-
-        NavigationManager.NavigateTo($"/OrderStatus/{_orderId}");
+      _cart.Add(new CartItem { ProductId = product.Id, Name = product.Name, Quantity = 1 });
     }
+  }
 
-    
-    private static string GetProductName(string key)
+  private async Task SubmitOrder()
+  {
+    _orderId = Guid.NewGuid().ToString();
+    var orderInfo = new OrderInfo
     {
-        return key.Replace("stock-of-", "");
+      OrderId = _orderId,
+      PurchaserUsername = _username,
+      Products = _cart.Select(c => c.Name).ToList()
+    };
+
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = $"order-status-{_orderId}", Value = "pending" });
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = $"order-info-{_orderId}", Value = JsonSerializer.Serialize(orderInfo) });
+
+    HashSet<string> pendingOrders;
+    try
+    {
+      var pendingOrdersItem = await KeyValueStoreService.GetItemAsync("pending-orders");
+      pendingOrders = JsonSerializer.Deserialize<HashSet<string>>(pendingOrdersItem.Value) ?? new HashSet<string>();
     }
+    catch
+    {
+      pendingOrders = new HashSet<string>();
+    }
+
+    pendingOrders.Add(_orderId);
+
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = "pending-orders", Value = JsonSerializer.Serialize(pendingOrders) });
+
+    _cart.Clear();
+
+    NavigationManager.NavigateTo($"/OrderStatus/{_orderId}");
+  }
+
+
+  private static string GetProductName(string key)
+  {
+    return key.Replace("stock-of-", "");
+  }
+
 }
+

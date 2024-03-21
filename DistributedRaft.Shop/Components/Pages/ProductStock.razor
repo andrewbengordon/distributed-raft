@@ -29,8 +29,8 @@ else
         <td>@GetProductName(product.Key)</td>
         <td>@product.Value</td>
         <td>
-          <button class="btn btn-outline-primary" @onclick="() => IncrementStock(product.Key)">+</button>
-          <button class="btn btn-outline-primary" @onclick="() => DecrementStock(product.Key)">-</button>
+          <button class="btn btn-primary" @onclick="() => IncrementStock(product.Key)">+</button>
+          <button class="btn btn-primary" @onclick="() => DecrementStock(product.Key)">-</button>
         </td>
       </tr>
     }

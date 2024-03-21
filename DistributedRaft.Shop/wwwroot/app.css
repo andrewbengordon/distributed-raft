@@ -2,18 +2,41 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
-a, .btn-link {
-    color: #006bb7;
+a,
+.btn-link {
+    color: #6e34b5;
 }
 
 .btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    color: #fffcf2;
+    background-color: #6e34b5;
+    border-color: #6e34b5;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary:focus-visible {
+    color: #fffcf2;
+    background-color: #6e34b5 !important;
+    border-color: #252422;
+    transition: all 0.2s ease-in-out;
+    border-radius: 0;
+}
+
+.btn-primary:focus-visible {
+    box-shadow: 0 0 0 0.1rem #fff, 0 0 0 0.25rem #6e34b5 !important;
+}
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem #252422, 0 0 0 0.25rem #6e34b5;
+}
+
+.nav-link:hover {
+    background-color: #6e34b5 !important;
 }
 
 .content {
