@@ -50,10 +50,17 @@ else
 
   private async Task FetchPendingOrders()
   {
-    var pendingOrdersResponse = await KeyValueStoreService.GetItemAsync("pending-orders");
-    if (pendingOrdersResponse?.Value != null)
+    try
     {
-      _pendingOrders = JsonSerializer.Deserialize<HashSet<string>>(pendingOrdersResponse.Value) ?? [];
+      var pendingOrdersResponse = await KeyValueStoreService.GetItemAsync("pending-orders");
+      if (pendingOrdersResponse?.Value != null)
+      {
+        _pendingOrders = JsonSerializer.Deserialize<HashSet<string>>(pendingOrdersResponse.Value) ?? [];
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error fetching pending orders: {ex.Message}");
     }
   }
   
