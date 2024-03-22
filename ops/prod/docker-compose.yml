@@ -56,7 +56,10 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       GATEWAY_URL: http://drew-raft:8080
+    networks:
+      - drew-raft-network
     restart: unless-stopped
+      
   
   swag:
     container_name: drew-raft-swag
