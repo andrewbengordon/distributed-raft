@@ -45,11 +45,18 @@
 
   protected override async Task OnInitializedAsync()
   {
-    await KeyValueStoreService.AddItemAsync(new KeyValueItem()
+    try
     {
-      Key = "balance-of-vendor",
-      Value = "0"
-    });
+      await KeyValueStoreService.GetItemAsync("balance-of-vendor");
+    }
+    catch
+    {
+      await KeyValueStoreService.AddItemAsync(new KeyValueItem()
+      {
+        Key = "balance-of-vendor",
+        Value = "0"
+      });
+    }
   }
 
   private async Task GetBalance()
