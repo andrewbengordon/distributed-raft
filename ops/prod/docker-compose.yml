@@ -6,6 +6,8 @@ x-node_base: &node_base
     dockerfile: Dockerfile
     target: runtime
   restart: unless-stopped
+  networks:
+    - drew-raft-network
 
 x-node_environment: &node_environment
   ASPNETCORE_ENVIRONMENT: Production
@@ -45,6 +47,8 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       CLUSTER_NODES: http://node1:8080;http://node2:8080;http://node3:8080
+    networks:
+      - drew-raft-network
     restart: unless-stopped
     
   shop:
@@ -79,6 +83,8 @@ services:
       - ./swag-default.conf:/config/nginx/site-confs/default.conf
     ports:
       - 0.0.0.0:4321:443
+    networks:
+      - drew-raft-network
     restart: unless-stopped
     
 networks:
