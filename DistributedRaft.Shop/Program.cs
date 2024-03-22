@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(Environment.GetEnvironmentVariable("GATEWAY_ADDRESS") ?? "http://drew-raft:8080") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(Environment.GetEnvironmentVariable("GATEWAY_URL") ?? "http://localhost:4322") });
 
 builder.Services.AddScoped<KeyValueStoreService>();
 
