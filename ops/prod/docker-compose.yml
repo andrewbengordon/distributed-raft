@@ -81,4 +81,4 @@ services:
 networks:
   drew-raft-network:
     name: drew-raft-network
-    driver: bridge
+    external: true
