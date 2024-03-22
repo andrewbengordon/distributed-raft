@@ -55,6 +55,7 @@ services:
       target: runtime
     environment:
       ASPNETCORE_URLS: http://+:8080
+      GATEWAY_URL: http://drew-raft:8080
     restart: unless-stopped
   
   swag:
@@ -76,3 +77,8 @@ services:
     ports:
       - 0.0.0.0:4321:443
     restart: unless-stopped
+    
+networks:
+  drew-raft-network:
+    name: drew-raft-network
+    driver: bridge
