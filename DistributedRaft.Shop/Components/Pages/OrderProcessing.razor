@@ -118,7 +118,7 @@ else
     
     var newStock = currentStock - 1;
 
-    await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = productName, Value = newStock.ToString() });
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = "stock-of-" + productName, Value = newStock.ToString() });
   }
 
   private async Task<int> GetUserBalance(string username)
