@@ -1,23 +1,22 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER $APP_UID
+﻿FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS development
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+COPY . ./
+CMD dotnet watch run --no-launch-profile --non-interactive --no-hot-reload
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["DistributedRaft.Shop/DistributedRaft.Shop.csproj", "DistributedRaft.Shop/"]
-RUN dotnet restore "DistributedRaft.Shop/DistributedRaft.Shop.csproj"
-COPY . .
-WORKDIR "/src/DistributedRaft.Shop"
-RUN dotnet build "DistributedRaft.Shop.csproj" -c $BUILD_CONFIGURATION -o /app/build
-
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "DistributedRaft.Shop.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build-env
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+COPY DistributedRaft.Shop.csproj .
+RUN dotnet restore "DistributedRaft.Shop.csproj"
+
+COPY . ./
+
+WORKDIR "/app"
+RUN dotnet publish "DistributedRaft.Shop.csproj" -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+WORKDIR /app
+
+COPY --from=build-env /app/publish .
+
 ENTRYPOINT ["dotnet", "DistributedRaft.Shop.dll"]
