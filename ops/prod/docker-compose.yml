@@ -52,7 +52,7 @@ services:
     build:
       context: ../../DistributedRaft.Shop
       dockerfile: Dockerfile
-      target: final
+      target: runtime
     environment:
       ASPNETCORE_URLS: http://+:8080
     restart: unless-stopped
