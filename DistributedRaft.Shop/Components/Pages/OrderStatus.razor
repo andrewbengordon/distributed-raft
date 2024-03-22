@@ -8,6 +8,7 @@
 @if (!string.IsNullOrEmpty(orderStatus))
 {
   <p>Order Status: @orderStatus</p>
+  <button class="btn btn-primary" @onclick="RefreshStatus">Refresh</button>
 }
 else
 {
@@ -21,6 +22,12 @@ else
   private string orderStatus;
 
   protected override async Task OnInitializedAsync()
+  {
+    var statusItem = await KeyValueStoreService.GetItemAsync($"order-status-{OrderId}");
+    orderStatus = statusItem?.Value ?? "Unknown";
+  }
+  
+  private async Task RefreshStatus()
   {
     var statusItem = await KeyValueStoreService.GetItemAsync($"order-status-{OrderId}");
     orderStatus = statusItem?.Value ?? "Unknown";

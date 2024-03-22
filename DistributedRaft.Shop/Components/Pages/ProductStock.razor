@@ -85,7 +85,13 @@ else
   private async Task DecrementStock(string productName)
   {
     var item = await KeyValueStoreService.GetItemAsync(productName);
+    
     var currentStock = item != null ? int.Parse(item.Value) : 0;
+    if (currentStock == 0)
+    {
+      return;
+    }
+    
     var newStock = currentStock - 1;
 
     await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = productName, Value = newStock.ToString() });

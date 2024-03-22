@@ -43,6 +43,15 @@
   private decimal? _balance;
   private decimal _transactionAmount = 0;
 
+  protected override async Task OnInitializedAsync()
+  {
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem()
+    {
+      Key = "balance-of-vendor",
+      Value = "0"
+    });
+  }
+
   private async Task GetBalance()
   {
     try

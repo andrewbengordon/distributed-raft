@@ -1,0 +1,171 @@
+@rendermode InteractiveServer
+@page "/OrderProcessing"
+@using DistributedRaft.Shop.Services
+@using System.Text.Json
+@using DistributedRaft.Shop.Models
+@inject KeyValueStoreService KeyValueStoreService
+
+<h3>Pending Orders</h3>
+
+@if (_pendingOrders == null)
+{
+  <p>
+    <em>Loading...</em>
+  </p>
+}
+else if (_pendingOrders.Count == 0)
+{
+  <p>No pending orders.</p>
+}
+else
+{
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Order ID</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var orderId in _pendingOrders)
+    {
+      <tr>
+        <td>@orderId</td>
+        <td>
+          <button class="btn btn-primary" @onclick="() => ProcessOrder(orderId)">Process</button>
+        </td>
+      </tr>
+    }
+    </tbody>
+  </table>
+}
+
+@code {
+  private HashSet<string> _pendingOrders = [];
+
+  protected override async Task OnInitializedAsync()
+  {
+    await FetchPendingOrders();
+  }
+
+  private async Task FetchPendingOrders()
+  {
+    var pendingOrdersResponse = await KeyValueStoreService.GetItemAsync("pending-orders");
+    if (pendingOrdersResponse?.Value != null)
+    {
+      _pendingOrders = JsonSerializer.Deserialize<HashSet<string>>(pendingOrdersResponse.Value) ?? [];
+    }
+  }
+  
+  private async Task<OrderInfo?> FetchOrderInfo(string orderId)
+  {
+    var orderInfoResponse = await KeyValueStoreService.GetItemAsync($"order-info-{orderId}");
+    return orderInfoResponse?.Value != null ? JsonSerializer.Deserialize<OrderInfo>(orderInfoResponse.Value) : null;
+  }
+  
+  private async Task<bool> IsProductInStock(string productName)
+  {
+    var productStockResponse = await KeyValueStoreService.GetItemAsync($"stock-of-{productName}");
+    return productStockResponse?.Value != null && int.TryParse(productStockResponse.Value, out var stock) && stock > 0;
+  }
+  
+  private async Task MarkOrderAsProcessed(string orderId, string processorId)
+  {
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem()
+    {
+      Key = $"order-status-{orderId}",
+      Value = "processed-by-" + processorId
+    });
+    _pendingOrders.Remove(orderId);
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem()
+    {
+      Key = "pending-orders",
+      Value = JsonSerializer.Serialize(_pendingOrders)
+    });
+  }
+  
+  private async Task MarkOrderAsFailed(string orderId)
+  {
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem()
+    {
+      Key = $"order-status-{orderId}",
+      Value = "rejected"
+    });
+    _pendingOrders.Remove(orderId);
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem()
+    {
+      Key = "pending-orders",
+      Value = JsonSerializer.Serialize(_pendingOrders)
+    });
+  }
+  
+  private async Task DecrementStock(string productName)
+  {
+    var item = await KeyValueStoreService.GetItemAsync("stock-of-" + productName);
+    
+    var currentStock = item != null ? int.Parse(item.Value) : 0;
+    if (currentStock == 0)
+    {
+      return;
+    }
+    
+    var newStock = currentStock - 1;
+
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = productName, Value = newStock.ToString() });
+  }
+
+  private async Task<int> GetUserBalance(string username)
+  {
+    var userBalance = await KeyValueStoreService.GetItemAsync("balance-of-" + username);
+    return userBalance?.Value != null ? int.Parse(userBalance.Value) : 0;
+  }
+  
+  private async Task DeductFromUserBalance(string username, int amount)
+  {
+    var userBalance = await KeyValueStoreService.GetItemAsync("balance-of-" + username);
+    var currentBalance = userBalance != null ? int.Parse(userBalance.Value) : 0;
+    var newBalance = currentBalance - amount;
+    await KeyValueStoreService.AddItemAsync(new KeyValueItem { Key = "balance-of-" + username, Value = newBalance.ToString() });
+  }
+
+  private async Task ProcessOrder(string orderId)
+  {
+    var processorId = Guid.NewGuid().ToString();
+    
+    var orderInfoResponse = await FetchOrderInfo(orderId);
+    
+    if (orderInfoResponse != null)
+    {
+      foreach (var product in orderInfoResponse.Products)
+      {
+        if (!await IsProductInStock(product))
+        {
+          await MarkOrderAsFailed(orderId);
+          return;
+        }
+      }
+      
+      if (orderInfoResponse.Products.Count <= await GetUserBalance(orderInfoResponse.PurchaserUsername))
+      {
+        foreach (var product in orderInfoResponse.Products)
+        {
+          await DecrementStock(product);
+        }
+      }
+      else
+      {
+        await MarkOrderAsFailed(orderId);
+        return;
+      }
+      
+      await DeductFromUserBalance(orderInfoResponse.PurchaserUsername, orderInfoResponse.Products.Count);
+      
+      await MarkOrderAsProcessed(orderId, processorId);
+    }
+    else 
+    {
+      Console.WriteLine($"Order info not found for order ID {orderId}");
+    }
+  }
+
+}
